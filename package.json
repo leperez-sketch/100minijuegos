@@ -15,11 +15,11 @@
     }
   },
   "devDependencies": {
-    "electron": "^...",
-    "electron-builder": "^..."
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "express": "^...",
-    "socket.io": "^..."
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
   }
 }
