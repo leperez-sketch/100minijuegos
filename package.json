@@ -1,0 +1,25 @@
+{
+  "name": "la-licuadora-gigante",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "node index.js",
+    "electron": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.tu-nombre.licuadora",
+    "productName": "La Licuadora Gigante",
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "electron": "^...",
+    "electron-builder": "^..."
+  },
+  "dependencies": {
+    "express": "^...",
+    "socket.io": "^..."
+  }
+}

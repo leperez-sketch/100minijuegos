@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mario Party Arena</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #263238; display: flex; justify-content: center; align-items: center; gap: 20px; height: 100vh; margin: 0; font-family: sans-serif; }
+
+        #pantalla-inicio {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000 url('img/lobby_bg.png') center center / cover no-repeat;
+            color: white; display: flex; align-items: center;
+            justify-content: center; z-index: 200; overflow: hidden;
+        }
+
+        /* 3-column layout */
+        #lobby-layout {
+            position: relative; z-index: 2;
+            display: flex; align-items: center; gap: 24px;
+            width: 100%; max-width: 1280px; padding: 0 28px;
+        }
+
+        .lobby-card {
+            background: rgba(5,5,20,0.88);
+            border: 2px solid #c850c0;
+            border-radius: 16px; padding: 18px 20px;
+            box-shadow: 0 0 18px rgba(200,80,192,0.5), inset 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        /* ── LEFT PANEL ─────────────────────────────── */
+        #lobby-left {
+            display: flex; flex-direction: column; gap: 16px;
+            min-width: 200px; max-width: 240px; flex-shrink: 0;
+        }
+        #lobby-qr-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        #lobby-qr-title { color: #f0f; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px #f0f; margin: 0; }
+        #qr-inicio { width: 140px; height: 140px; border: 3px solid #00e5ff; border-radius: 8px; background: white; box-shadow: 0 0 12px rgba(0,229,255,0.6); }
+        #qr-inicio-url { margin: 0; color: #aaa; font-size: 9px; text-align: center; word-break: break-all; }
+        /* Pixel-art icon buttons */
+        .px-btn { background: none; border: none; padding: 0; cursor: pointer; image-rendering: pixelated; display: inline-block; transition: transform 0.1s, filter 0.1s; }
+        .px-btn:hover  { transform: scale(1.12); filter: brightness(1.2); }
+        .px-btn:active { transform: scale(0.93); }
+        .px-btn img    { display: block; image-rendering: pixelated; }
+
+        /* Volume button row */
+        #lobby-btn-grid {
+            display: flex; gap: 10px;
+            justify-content: center; width: 100%;
+        }
+        #btn-vol-on.muted  { opacity: 0.35; }
+        #btn-vol-off.muted { opacity: 0.35; }
+
+        #vol-slider-lobby { width: 100%; }
+
+        #lobby-players-card { }
+        #lobby-players-title { color: #00e5ff; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 10px; font-weight: bold; text-shadow: 0 0 6px #00e5ff; }
+        #lobby-lista-jugadores .lobby-pj-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; background: rgba(255,255,255,0.05); margin-bottom: 4px; font-size: 12px; }
+        #lobby-lista-jugadores .lobby-pj-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── CENTER PANEL ───────────────────────────── */
+        #lobby-center { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+        #game-selector { display: flex; align-items: center; gap: 18px; justify-content: center; }
+
+        /* Cartridge animations */
+        @keyframes cart-out-left  { from{transform:translateX(0);opacity:1} to{transform:translateX(-160%);opacity:0} }
+        @keyframes cart-out-right { from{transform:translateX(0);opacity:1} to{transform:translateX(160%);opacity:0} }
+        @keyframes cart-in-right  { from{transform:translateX(160%);opacity:0} to{transform:translateX(0);opacity:1} }
+        @keyframes cart-in-left   { from{transform:translateX(-160%);opacity:0} to{transform:translateX(0);opacity:1} }
+        .cart-anim-out-left  { animation: cart-out-left  0.22s ease-in  forwards; }
+        .cart-anim-out-right { animation: cart-out-right 0.22s ease-in  forwards; }
+        .cart-anim-in-right  { animation: cart-in-right  0.28s ease-out forwards; }
+        .cart-anim-in-left   { animation: cart-in-left   0.28s ease-out forwards; }
+
+        #cartridge-display {
+            width: 270px; height: 270px; overflow: visible; flex-shrink: 0; position: relative;
+        }
+        #cartridge-img {
+            width: 270px; height: 270px; object-fit: contain; image-rendering: pixelated; display: block;
+            filter: drop-shadow(0 0 14px rgba(0,200,255,0.6));
+            transition: filter 0.15s;
+        }
+        @keyframes cart-glow-pulse {
+            0%   { filter: drop-shadow(0 0 10px rgba(0,220,255,0.6)); }
+            50%  { filter: drop-shadow(0 0 40px rgba(255,255,255,1)) brightness(1.6); }
+            100% { filter: drop-shadow(0 0 10px rgba(0,220,255,0.6)); }
+        }
+        #cartridge-img.glowing { animation: cart-glow-pulse 0.35s ease-in-out 2; }
+
+        #game-name { display: none; }
+
+        #btn-iniciar {
+            background: none; border: none; padding: 0; cursor: pointer;
+            image-rendering: pixelated; display: block;
+            transition: transform 0.1s, filter 0.1s;
+        }
+        #btn-iniciar img { width: 400px; height: auto; image-rendering: pixelated; display: block; }
+        #btn-iniciar:hover  { transform: scale(1.05); filter: brightness(1.15) drop-shadow(0 0 12px rgba(0,229,255,0.8)); }
+        #btn-iniciar:active { transform: scale(0.95); }
+
+        /* ── TRANSITION OVERLAY ─────────────────────── */
+        #overlay-flash {
+            position: fixed; inset: 0; background: black;
+            z-index: 900; opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease-in;
+        }
+        #letsgo-sign {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%,-50%) scale(0.4);
+            z-index: 901; display: none;
+            image-rendering: pixelated;
+        }
+        #letsgo-sign img { width: 680px; height: auto; display: block; image-rendering: pixelated; }
+        #letsgo-sign.visible {
+            display: block;
+            animation: letsgo-pop 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes letsgo-pop {
+            from { transform: translate(-50%,-50%) scale(0.4); opacity: 0; }
+            to   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
+        }
+
+        /* ── RIGHT PANEL ────────────────────────────── */
+        #lobby-right { min-width: 180px; max-width: 220px; flex-shrink: 0; }
+        #lobby-right-title { color: #c850c0; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; text-align: center; margin: 0 0 10px; font-weight: bold; text-shadow: 0 0 6px #c850c0; }
+
+        /* Lobby characters layer */
+        #lobby-personajes {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 72%;
+            pointer-events: none; z-index: 10;
+        }
+        .lobby-jugador-wrap {
+            position: absolute; display: flex; flex-direction: column; align-items: center;
+            transition: left 0.06s linear;
+        }
+        .lobby-etiqueta {
+            background: rgba(0,0,0,0.82); color: #fff; padding: 5px 12px;
+            border-radius: 8px; font-size: 15px; font-weight: bold;
+            margin-bottom: 4px; white-space: nowrap;
+            border: 2px solid rgba(255,255,255,0.55);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            letter-spacing: 0.5px;
+        }
+
+        /* Volume controls (shared style) */
+        .vol-ctrl { display: flex; align-items: center; gap: 8px; }
+        .btn-mute { background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; padding: 6px 10px; font-size: 18px; cursor: pointer; }
+        .btn-mute:hover { background: rgba(255,255,255,0.2); }
+        .vol-slider { -webkit-appearance: none; appearance: none; width: 130px; height: 5px; border-radius: 3px; background: #80cbc4; outline: none; cursor: pointer; }
+        .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: white; }
+
+        /* Lobby volume slider */
+        #vol-slider-lobby { -webkit-appearance: none; appearance: none; height: 5px; border-radius: 3px; background: #80cbc4; outline: none; cursor: pointer; flex: 1; }
+        #vol-slider-lobby::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: white; }
+
+        #campo-de-juego {
+            width: 950px; height: 700px; position: relative;
+            background: url('img/fondo.png') center center / cover no-repeat;
+            border: 5px solid #90caf9; border-radius: 15px; overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 0 30px rgba(100,200,255,0.4);
+        }
+
+        .jugador-container {
+            width: 90px; height: 115px; position: absolute;
+            transition: left 0.1s linear, top 0.1s linear;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .etiqueta-nombre {
+            background: rgba(0,0,0,0.75); color: white; padding: 2px 6px;
+            border-radius: 5px; font-size: 11px; font-weight: bold;
+            margin-bottom: 2px; white-space: nowrap; border: 1px solid white;
+        }
+        .sprite-personaje {
+            width: 90px; height: 90px;
+            background-size: contain; background-repeat: no-repeat; background-position: center;
+        }
+
+        /* Double-size sprites for the lobby */
+        .lobby-sprite {
+            width: 180px !important; height: 180px !important;
+        }
+        @keyframes caminar {
+            0%,100% { transform: translateY(0)   scaleX(var(--flip,1)); }
+            25%,75%  { transform: translateY(-4px) scaleX(var(--flip,1)); }
+        }
+        @keyframes idle {
+            0%,100% { transform: translateY(0)   scaleX(var(--flip,1)); }
+            50%     { transform: translateY(-2px) scaleX(var(--flip,1)); }
+        }
+        .sprite-personaje.caminando { animation: caminar 0.35s steps(1) infinite; }
+        .sprite-personaje.idle      { animation: idle 1.5s ease-in-out infinite; }
+
+        @keyframes golpe {
+            0%   { transform: scaleX(var(--flip,1)) scaleY(1.1); }
+            30%  { transform: scaleX(var(--flip,1)) scale(0.88); }
+            60%  { transform: scaleX(var(--flip,1)) scale(1.05); }
+            100% { transform: scaleX(var(--flip,1)) scale(1); }
+        }
+        .sprite-personaje.golpeado { animation: golpe 0.4s ease-out forwards; }
+
+        @keyframes patinar {
+            0%,100% { transform: skewX(calc(var(--flip,1)*-18deg)) scaleX(var(--flip,1)) scaleY(0.88); }
+            50%     { transform: skewX(calc(var(--flip,1)*-10deg)) scaleX(var(--flip,1)) scaleY(0.93); }
+        }
+        .sprite-personaje.patinando {
+            animation: patinar 0.15s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px #00e5ff);
+        }
+
+        /* === ROBOT SPRITESHEET (1380×752, 4 cols × 3 rows) ===
+           background-size: 400% 300%
+           Col positions: 0%  33.33%  66.67%  100%
+           Row positions: 0%  50%     100%
+           Row 0 (y=0%):   Idle frames  (arm variation × 4)
+           Row 1 (y=50%):  Walk frames  (walk cycle × 4)
+           Row 2 (y=100%): Attack frames (charge/fire/laser/explode × 4) */
+        .sprite-personaje.mecanico-sprite {
+            background-size: 400% 300%;
+            background-position: 0% 0%;
+            background-repeat: no-repeat;
+            background-image: url('img/mecanico_sheet.png');
+        }
+        .lobby-sprite.mecanico-sprite {
+            background-size: 400% 300% !important;
+        }
+
+        /* ── Idle: cycle row 0 (4 frames, 1s) ── */
+        @keyframes mec-idle-pos {
+            0%    { background-position: 0%       0%; }
+            25%   { background-position: 33.33%   0%; }
+            50%   { background-position: 66.67%   0%; }
+            75%   { background-position: 100%     0%; }
+        }
+        @keyframes mec-idle-bob {
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
+            50%     { transform: scaleX(var(--flip,1)) translateY(-3px); }
+        }
+
+        /* ── Walk: cycle row 1 (4 frames, 0.4s) ── */
+        @keyframes mec-walk-pos {
+            0%    { background-position: 0%       50%; }
+            25%   { background-position: 33.33%   50%; }
+            50%   { background-position: 66.67%   50%; }
+            75%   { background-position: 100%     50%; }
+        }
+        @keyframes mec-walk-bob {
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
+            25%,75% { transform: scaleX(var(--flip,1)) translateY(-4px); }
+        }
+
+        /* ── Attack/Skate: row 2 frames 1-2 (laser firing, 0.3s) ── */
+        @keyframes mec-laser-pos {
+            0%    { background-position: 33.33%  100%; }
+            50%   { background-position: 66.67%  100%; }
+        }
+        @keyframes mec-boost {
+            0%,100% { transform: scaleX(var(--flip,1)) scaleY(0.94) translateY(2px); }
+            50%     { transform: scaleX(var(--flip,1)) scaleY(1.0)  translateY(0px); }
+        }
+
+        /* ── Hit: row 2 frame 3 (explosion) ── */
+        @keyframes mec-hit-pos {
+            0%, 100% { background-position: 100% 100%; }
+        }
+
+        .sprite-personaje.mecanico-sprite.idle {
+            background-image: url('img/mecanico_sheet.png') !important;
+            background-size: 400% 300% !important;
+            animation: mec-idle-bob 1.6s ease-in-out infinite,
+                       mec-idle-pos 1.6s steps(1) infinite;
+        }
+        .sprite-personaje.mecanico-sprite.caminando {
+            background-image: url('img/mecanico_sheet.png') !important;
+            background-size: 400% 300% !important;
+            animation: mec-walk-bob 0.4s ease-in-out infinite,
+                       mec-walk-pos 0.4s steps(1) infinite;
+        }
+        .sprite-personaje.mecanico-sprite.patinando {
+            background-image: url('img/mecanico_sheet.png') !important;
+            background-size: 400% 300% !important;
+            animation: mec-boost 0.2s ease-in-out infinite,
+                       mec-laser-pos 0.3s steps(1) infinite;
+            filter: drop-shadow(0 0 10px #00e5ff);
+        }
+        .sprite-personaje.mecanico-sprite.golpeado {
+            background-image: url('img/mecanico_sheet.png') !important;
+            background-size: 400% 300% !important;
+            animation: golpe 0.4s ease-out forwards, mec-hit-pos 0.4s steps(1) forwards;
+        }
+
+        /* ---- HADA sprite — fully spritesheet-based (5-col × 2-row) ---- */
+        .sprite-personaje.hada-sprite {
+            background-size: 500% 200%;
+            background-position: 0% 0%;
+            background-repeat: no-repeat;
+        }
+
+        /* Frame cycling — idle uses row 1 (0%), walk uses row 2 (100%) */
+        @keyframes hada-idle-pos {
+            0%   { background-position: 0%   0%; }
+            20%  { background-position: 25%  0%; }
+            40%  { background-position: 50%  0%; }
+            60%  { background-position: 75%  0%; }
+            80%  { background-position: 100% 0%; }
+        }
+        @keyframes hada-walk-pos {
+            0%   { background-position: 0%   100%; }
+            20%  { background-position: 25%  100%; }
+            40%  { background-position: 50%  100%; }
+            60%  { background-position: 75%  100%; }
+            80%  { background-position: 100% 100%; }
+        }
+
+        /* Transform animations (vertical float / bob + flip) */
+        @keyframes hada-float {
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px);  }
+            50%     { transform: scaleX(var(--flip,1)) translateY(-6px);  }
+        }
+        @keyframes hada-bob {
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px);  }
+            50%     { transform: scaleX(var(--flip,1)) translateY(-4px);  }
+        }
+
+        /* Idle: gentle float through row 1 */
+        .sprite-personaje.hada-sprite.idle {
+            background-image: url('img/hada_sheet.png') !important;
+            background-size: 500% 200% !important;
+            animation: hada-float   1.8s ease-in-out infinite,
+                       hada-idle-pos 1.8s steps(1)    infinite;
+        }
+
+        /* Walking: faster cycle through row 2 */
+        .sprite-personaje.hada-sprite.caminando {
+            background-image: url('img/hada_sheet.png') !important;
+            background-size: 500% 200% !important;
+            animation: hada-bob     0.5s ease-in-out infinite,
+                       hada-walk-pos 0.5s steps(1)    infinite;
+        }
+
+        /* Skating: same walk cycle, faster + purple glow */
+        .sprite-personaje.hada-sprite.patinando {
+            background-image: url('img/hada_sheet.png') !important;
+            background-size: 500% 200% !important;
+            animation: hada-bob     0.25s ease-in-out infinite,
+                       hada-walk-pos 0.3s steps(1)    infinite;
+            filter: drop-shadow(0 0 8px #c77dff);
+        }
+
+        /* Hit state */
+        .sprite-personaje.hada-sprite.golpeado {
+            background-image: url('img/hada_sheet.png') !important;
+            background-size: 500% 200% !important;
+            animation: golpe 0.4s ease-out forwards;
+        }
+
+        /* Lobby: bigger container to compensate for spritesheet padding */
+        .lobby-sprite.hada-sprite {
+            width:  260px !important;
+            height: 260px !important;
+            background-size: 500% 200% !important;
+        }
+
+        /* Game sprite: slightly larger than 90×90 for same reason */
+        .sprite-personaje.hada-sprite {
+            width:  120px !important;
+            height: 120px !important;
+        }
+
+        .moneda {
+            width: 30px; height: 30px; position: absolute; background: #ffd700;
+            border-radius: 50%; border: 2px solid #b8860b; box-shadow: 0 0 10px #ffd700;
+            animation: girar 1s infinite linear;
+        }
+        @keyframes girar { to { transform: rotateY(360deg); } }
+
+        #pantalla-final {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.82); color: white; text-align: center; z-index: 100;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        #pantalla-final.visible { display: flex; }
+        #pantalla-final h1 { font-size: 72px; color: #ff5252; margin: 0 0 10px; }
+        #pantalla-final h2 { font-size: 36px; color: #ffd700; margin: 0 0 10px; }
+        #pantalla-final p  { color: #ccc; font-size: 16px; margin: 0; }
+
+        /* ---- SIDE PANEL ---- */
+        #panel-lateral {
+            width: 190px; display: flex; flex-direction: column; gap: 14px;
+            align-self: stretch; overflow-y: auto; padding: 4px 0;
+        }
+
+        .panel-seccion {
+            background: rgba(0,0,0,0.45); border-radius: 12px;
+            border: 1.5px solid rgba(255,255,255,0.18); padding: 12px 10px;
+        }
+        .panel-titulo {
+            color: #80cbc4; margin: 0 0 8px 0; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 1px; text-align: center; font-weight: bold;
+        }
+
+        #qr-code { display: block; width: 140px; height: 140px; margin: 0 auto 6px; border-radius: 6px; }
+        #qr-url  { color: #aaa; font-size: 10px; text-align: center; word-break: break-all; }
+
+        .fila-jugador {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.07); border-radius: 7px; padding: 5px 8px;
+            margin-bottom: 5px;
+        }
+        .fila-jugador:last-child { margin-bottom: 0; }
+        .fila-jugador .jug-nombre { flex: 1; color: white; font-size: 12px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fila-jugador .jug-check  { font-size: 16px; }
+
+        .fila-score {
+            display: flex; align-items: center; gap: 6px;
+            padding: 4px 6px; border-radius: 6px; margin-bottom: 4px;
+        }
+        .fila-score:last-child { margin-bottom: 0; }
+        .fila-score .score-pos { color: #ffd700; font-size: 13px; font-weight: bold; width: 18px; text-align: center; }
+        .fila-score .score-nom { flex: 1; color: white; font-size: 12px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fila-score .score-pts { color: #80cbc4; font-size: 13px; font-weight: bold; }
+        .fila-score.primero { background: rgba(255,215,0,0.15); }
+        .fila-score.segundo { background: rgba(192,192,192,0.1); }
+        .fila-score.tercero { background: rgba(205,127,50,0.1); }
+
+        #btn-lobby {
+            width: 100%; padding: 10px; font-size: 13px; font-weight: bold;
+            background: #1565c0; color: white; border: none; border-radius: 8px;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            margin-bottom: 8px;
+        }
+        #btn-lobby:hover  { background: #0d47a1; }
+        #btn-lobby:active { transform: scale(0.97); }
+
+        #btn-terminar {
+            width: 100%; padding: 10px; font-size: 13px; font-weight: bold;
+            background: #c62828; color: white; border: 2px solid #ef9a9a;
+            border-radius: 10px; cursor: pointer;
+        }
+        #btn-terminar:hover { background: #b71c1c; }
+        #btn-terminar:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+    <!-- Transition: white flash + Let's Go sign (outside pantalla-inicio so they survive its hide) -->
+    <div id="overlay-flash"></div>
+    <div id="letsgo-sign"><img src="img/letsgo.png" alt="LET'S GO!"></div>
+
+    <div id="pantalla-inicio">
+        <!-- Characters walk in the background -->
+        <div id="lobby-personajes"></div>
+
+        <!-- 3-column layout -->
+        <div id="lobby-layout">
+
+            <!-- LEFT: QR + Volume + Nav + Players -->
+            <div id="lobby-left">
+                <div id="lobby-qr-card" class="lobby-card">
+                    <p id="lobby-qr-title">📡 Escanea para jugar</p>
+                    <img id="qr-inicio" src="" alt="QR Code">
+                    <p id="qr-inicio-url"></p>
+                    <div id="lobby-btn-grid">
+                        <button id="btn-vol-on"  class="px-btn"><img src="img/btn_vol_on.png"  width="52" alt="🔊"></button>
+                        <button id="btn-vol-off" class="px-btn"><img src="img/btn_vol_off.png" width="52" alt="🔇"></button>
+                    </div>
+                    <input id="vol-slider-lobby" type="range" min="0" max="1" step="0.05" value="0.5">
+                </div>
+                <div id="lobby-players-card" class="lobby-card">
+                    <p id="lobby-players-title">Jugadores conectados</p>
+                    <div id="lobby-lista-jugadores"></div>
+                </div>
+            </div>
+
+            <!-- CENTER: Cartridge selector (no background card) -->
+            <div id="lobby-center">
+                <div id="game-selector">
+                    <button id="btn-prev-game" class="px-btn"><img src="img/btn_prev.png" width="80" alt="◀"></button>
+                    <div id="cartridge-display">
+                        <img id="cartridge-img" src="" alt="Juego">
+                    </div>
+                    <button id="btn-next-game" class="px-btn"><img src="img/btn_next.png" width="80" alt="▶"></button>
+                </div>
+                <div id="game-name"></div>
+                <button id="btn-iniciar"><img src="img/btn_iniciar.png" alt="INICIAR JUEGO"></button>
+            </div>
+
+            <!-- RIGHT: empty space so center stays centered -->
+            <div id="lobby-right" style="min-width:200px;max-width:240px;flex-shrink:0;"></div>
+
+        </div>
+    </div>
+
+    <div id="campo-de-juego">
+        <div id="elementos-juego"></div>
+        <div id="pantalla-final">
+            <h1>GAME OVER</h1>
+            <h2 id="texto-ganador"></h2>
+            <p>Presiona "Jugar de Nuevo" en tu celular</p>
+        </div>
+    </div>
+
+    <div id="panel-lateral">
+        <div class="panel-seccion">
+            <p class="panel-titulo">Escanea para jugar</p>
+            <img id="qr-code" src="" alt="QR code">
+            <p id="qr-url"></p>
+        </div>
+        <div class="panel-seccion">
+            <p class="panel-titulo">Jugadores</p>
+            <div id="lista-jugadores"></div>
+        </div>
+        <div class="panel-seccion">
+            <p class="panel-titulo">Marcador Total</p>
+            <div id="lista-scores"></div>
+        </div>
+        <div class="panel-seccion">
+            <p class="panel-titulo">Volumen</p>
+            <div class="vol-ctrl">
+                <button id="btn-mute" class="btn-mute">🔊</button>
+                <input id="vol-slider" class="vol-slider" type="range" min="0" max="1" step="0.05" value="0.4">
+            </div>
+        </div>
+        <div class="panel-seccion">
+            <button id="btn-lobby">🏠 Volver al Lobby</button>
+            <button id="btn-terminar">🔄 Terminar Juego</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const contenedor     = document.getElementById('elementos-juego');
+        const pantallaFinal  = document.getElementById('pantalla-final');
+        const textoGanador   = document.getElementById('texto-ganador');
+        const pantallaInicio = document.getElementById('pantalla-inicio');
+        const listaJugadores = document.getElementById('lista-jugadores');
+        const listaScores    = document.getElementById('lista-scores');
+
+        // QR code (side panel + welcome screen)
+        const mandoURL = window.location.origin + '/mando';
+        const qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(mandoURL) + '&size=140x140&bgcolor=ffffff';
+        document.getElementById('qr-code').src  = qrSrc;
+        document.getElementById('qr-url').textContent = mandoURL;
+        document.getElementById('qr-inicio').src = qrSrc;
+        document.getElementById('qr-inicio-url').textContent = mandoURL;
+
+        // ── GAME SELECTOR ──────────────────────────────────────────────
+        const juegos = [
+            { nombre: 'Patinaje sobre Hielo 🛼', imagen: 'img/cartucho_azul.png'   },
+            { nombre: 'La Licuadora Gigante 🧃',  imagen: 'img/cartucho_verde.png'  },
+        ];
+        let juegoIdx = 0;
+        let cartridgeAnimating = false;
+
+        function actualizarSelector() {
+            const j = juegos[juegoIdx];
+            document.getElementById('game-name').textContent = j.nombre;
+            document.getElementById('cartridge-img').src = j.imagen;
+        }
+        actualizarSelector();
+
+        function switchCartridge(dir) {
+            if (cartridgeAnimating) return;
+            cartridgeAnimating = true;
+            const img = document.getElementById('cartridge-img');
+            const outClass = dir > 0 ? 'cart-anim-out-left' : 'cart-anim-out-right';
+            const inClass  = dir > 0 ? 'cart-anim-in-right' : 'cart-anim-in-left';
+            img.classList.add(outClass);
+            img.addEventListener('animationend', () => {
+                img.classList.remove(outClass);
+                juegoIdx = (juegoIdx + dir + juegos.length) % juegos.length;
+                actualizarSelector();
+                img.classList.add(inClass);
+                img.addEventListener('animationend', () => {
+                    img.classList.remove(inClass);
+                    cartridgeAnimating = false;
+                }, { once: true });
+            }, { once: true });
+        }
+
+        document.getElementById('btn-prev-game').onclick = () => switchCartridge(-1);
+        document.getElementById('btn-next-game').onclick = () => switchCartridge(1);
+
+        // Lobby player list (left panel)
+        function renderLobbyJugadores(posiciones) {
+            const lista = document.getElementById('lobby-lista-jugadores');
+            if (!lista) return;
+            lista.innerHTML = '';
+            const COLORES_CSS = {
+                rojo:'#f44336',azul:'#2196F3',verde:'#4CAF50',amarillo:'#FFC107',
+                morado:'#9C27B0',naranja:'#FF9800',ninja:'#37474F',astronauta:'#607D8B',
+                caballero:'#78909C',hada:'#E91E63',mecanico:'#FF5722',samurai:'#B71C1C'
+            };
+            for (const id in posiciones) {
+                const l = posiciones[id];
+                const row = document.createElement('div');
+                row.className = 'lobby-pj-row';
+                const dot = document.createElement('div');
+                dot.className = 'lobby-pj-dot';
+                dot.style.background = COLORES_CSS[l.color] || '#aaa';
+                const nom = document.createElement('span');
+                nom.textContent = l.nombre;
+                nom.style.color = '#fff';
+                row.appendChild(dot);
+                row.appendChild(nom);
+                lista.appendChild(row);
+            }
+        }
+
+        // Audio
+        const audioLobby  = new Audio('sounds/musica-lobby.mp3');
+        audioLobby.loop   = true;
+        audioLobby.volume = 0.5;
+
+        const audioMusica = new Audio('sounds/musica.mp3');
+        audioMusica.loop  = true;
+        audioMusica.volume = 0.4;
+
+        const audioMoneda = new Audio('sounds/moneda.mp3');
+        const audioGanar  = new Audio('sounds/ganar.mp3');
+
+        // Try autoplay lobby music; will succeed after any user gesture
+        audioLobby.play().catch(() => {});
+        document.addEventListener('click', () => {
+            if (pantallaInicio.style.display !== 'none' && audioLobby.paused) {
+                audioLobby.play().catch(() => {});
+            }
+        }, { once: true });
+
+        // --- Lobby volume controls (pixel-art buttons) ---
+        const btnVolOn     = document.getElementById('btn-vol-on');
+        const btnVolOff    = document.getElementById('btn-vol-off');
+        const volSliderLobby = document.getElementById('vol-slider-lobby');
+        let lobbyMuted = false, lobbyVolPrev = 0.5;
+
+        function setLobbyMute(muted) {
+            lobbyMuted = muted;
+            btnVolOn.classList.toggle('muted',  muted);
+            btnVolOff.classList.toggle('muted', !muted);
+            if (muted) {
+                lobbyVolPrev = audioLobby.volume || 0.5;
+                audioLobby.volume = 0;
+                volSliderLobby.value = 0;
+            } else {
+                audioLobby.volume = lobbyVolPrev;
+                volSliderLobby.value = lobbyVolPrev;
+            }
+        }
+        btnVolOn.addEventListener('click',  () => setLobbyMute(true));
+        btnVolOff.addEventListener('click', () => setLobbyMute(false));
+        volSliderLobby.addEventListener('input', () => {
+            audioLobby.volume = parseFloat(volSliderLobby.value);
+            const nowMuted = audioLobby.volume === 0;
+            if (nowMuted !== lobbyMuted) setLobbyMute(nowMuted);
+        });
+        // Initialise: vol_off dimmed (sound is on by default)
+        setLobbyMute(false);
+
+
+        // --- Game volume controls (side panel) ---
+        const btnMute   = document.getElementById('btn-mute');
+        const volSlider = document.getElementById('vol-slider');
+        let silenciado  = false;
+        let volAnterior = 0.4;
+
+        volSlider.addEventListener('input', () => {
+            audioMusica.volume = parseFloat(volSlider.value);
+            silenciado = audioMusica.volume === 0;
+            btnMute.textContent = silenciado ? '🔇' : '🔊';
+        });
+        btnMute.addEventListener('click', () => {
+            silenciado = !silenciado;
+            if (silenciado) {
+                volAnterior = audioMusica.volume;
+                audioMusica.volume = 0;
+                volSlider.value = 0;
+                btnMute.textContent = '🔇';
+            } else {
+                audioMusica.volume = volAnterior || 0.4;
+                volSlider.value = audioMusica.volume;
+                btnMute.textContent = '🔊';
+            }
+        });
+
+        const audioLetsGo = new Audio('sounds/lets-go.mp3');
+        audioLetsGo.volume = 0.85;
+
+        const overlayFlash = document.getElementById('overlay-flash');
+        const letsGoSign   = document.getElementById('letsgo-sign');
+
+        document.getElementById('btn-iniciar').onclick = () => {
+            const cartImg = document.getElementById('cartridge-img');
+
+            // 1. Glow the cartridge
+            cartImg.classList.remove('glowing');
+            void cartImg.offsetWidth; // reflow to restart animation
+            cartImg.classList.add('glowing');
+
+            // 2. Play "Let's Go!" sound
+            audioLetsGo.currentTime = 0;
+            audioLetsGo.play().catch(() => {});
+
+            // 3. Flash white overlay in
+            overlayFlash.style.opacity = '1';
+            overlayFlash.style.pointerEvents = 'all';
+
+            // 4. Pop in the sign after flash peaks
+            setTimeout(() => {
+                letsGoSign.classList.add('visible');
+            }, 320);
+
+            // 5. Start actual game after sign shows
+            setTimeout(() => {
+                socket.emit('iniciar_juego');
+                pantallaInicio.style.display = 'none';
+                audioLobby.pause();
+                audioLobby.currentTime = 0;
+                audioMusica.play().catch(() => {});
+            }, 700);
+
+            // 6. Fade the overlay out
+            setTimeout(() => {
+                overlayFlash.style.transition = 'opacity 0.5s ease-out';
+                overlayFlash.style.opacity = '0';
+                letsGoSign.classList.remove('visible');
+                setTimeout(() => {
+                    overlayFlash.style.transition = 'opacity 0.35s ease-in';
+                    overlayFlash.style.pointerEvents = 'none';
+                    letsGoSign.style.display = 'none';
+                    letsGoSign.style.display = '';
+                }, 520);
+            }, 1100);
+        };
+
+        // ---- LOBBY CHARACTER RENDERING ----
+        const lobbyContenedor = document.getElementById('lobby-personajes');
+        const LOBBY_W = 1000;
+        const LOBBY_FLOOR = 460;
+        const lobbyEls = {};          // reuse DOM nodes → CSS animations never reset
+
+        socket.on('estado_lobby', (posiciones) => {
+            renderLobbyJugadores(posiciones);
+            const seen = new Set();
+
+            for (const id in posiciones) {
+                const l = posiciones[id];
+                seen.add(id);
+                const xPct   = (l.x / LOBBY_W * 100).toFixed(2);
+                const jumpPx = Math.round(l.jumpHeight * 0.85);
+                const moving  = Math.abs(l.vx) > 0.4;
+                const estado  = (l.saltando || moving) ? 'caminando' : 'idle';
+                const esMecanico = l.color === 'mecanico';
+                const esHada     = l.color === 'hada';
+                const baseClass  = 'sprite-personaje lobby-sprite'
+                    + (esMecanico ? ' mecanico-sprite' : '')
+                    + (esHada     ? ' hada-sprite'     : '');
+
+                if (!lobbyEls[id]) {
+                    const wrap   = document.createElement('div');
+                    wrap.className = 'lobby-jugador-wrap';
+                    const label  = document.createElement('div');
+                    label.className = 'lobby-etiqueta';
+                    wrap.appendChild(label);
+                    const sprite = document.createElement('div');
+                    sprite.style.backgroundImage = esMecanico
+                        ? "url('img/mecanico_sheet.png')"
+                        : esHada ? "url('img/hada_sheet.png')"
+                        : `url('img/${l.color}.png')`;
+                    wrap.appendChild(sprite);
+                    lobbyContenedor.appendChild(wrap);
+                    lobbyEls[id] = { wrap, sprite, label };
+                }
+
+                const { wrap, sprite, label } = lobbyEls[id];
+                wrap.style.left   = xPct + '%';
+                wrap.style.bottom = `calc(2% + ${jumpPx}px)`;
+                label.textContent = l.nombre;
+                sprite.className  = baseClass + ' ' + estado;
+                sprite.style.setProperty('--flip', l.flip);
+            }
+
+            // Remove players that left
+            for (const id in lobbyEls) {
+                if (!seen.has(id)) { lobbyEls[id].wrap.remove(); delete lobbyEls[id]; }
+            }
+        });
+
+        document.getElementById('btn-lobby').onclick = () => {
+            if (confirm('¿Volver al lobby? Los jugadores mantendrán sus puntajes.')) {
+                socket.emit('volver_lobby');
+            }
+        };
+
+        document.getElementById('btn-terminar').onclick = () => {
+            if (confirm('¿Terminar el juego y reiniciar todos los puntajes?')) {
+                socket.emit('terminar_juego');
+            }
+        };
+
+        socket.on('volver_lobby', () => {
+            limpiarArena();
+            pantallaInicio.style.display = 'flex';
+            if (audioMusica) { audioMusica.pause(); audioMusica.currentTime = 0; }
+            audioLobby.play().catch(() => {});
+        });
+
+        socket.on('sonido', (tipo) => {
+            if (tipo === 'moneda') {
+                audioMoneda.currentTime = 0;
+                audioMoneda.play().catch(() => {});
+            }
+        });
+
+        const posicionesAnteriores = {};
+
+        function renderPanel(jugadores) {
+            listaJugadores.innerHTML = '';
+            for (const id in jugadores) {
+                const j = jugadores[id];
+                const fila = document.createElement('div');
+                fila.className = 'fila-jugador';
+                fila.innerHTML = `<span class="jug-nombre">${j.nombre}</span><span class="jug-check">${j.listo ? '✅' : '⬜'}</span>`;
+                listaJugadores.appendChild(fila);
+            }
+
+            const sorted = Object.values(jugadores).sort((a, b) => b.puntajeTotal - a.puntajeTotal);
+            listaScores.innerHTML = '';
+            const medalas = ['🥇','🥈','🥉'];
+            const clases  = ['primero','segundo','tercero'];
+            sorted.forEach((j, i) => {
+                const fila = document.createElement('div');
+                fila.className = 'fila-score ' + (clases[i] || '');
+                fila.innerHTML = `<span class="score-pos">${medalas[i] || (i+1)+'.'}</span><span class="score-nom">${j.nombre}</span><span class="score-pts">⭐${j.puntajeTotal}</span>`;
+                listaScores.appendChild(fila);
+            });
+        }
+
+        // Persistent game DOM nodes — reusing them keeps CSS animations running
+        const gameEls = {};
+        let monedaEl = null;
+
+        function limpiarArena() {
+            for (const id in gameEls) { gameEls[id].divC.remove(); delete gameEls[id]; }
+            if (monedaEl) { monedaEl.remove(); monedaEl = null; }
+            for (const id in posicionesAnteriores) delete posicionesAnteriores[id];
+            for (const id in lobbyEls) { lobbyEls[id].wrap.remove(); delete lobbyEls[id]; }
+        }
+
+        socket.on('estado_juego', (datos) => {
+            renderPanel(datos.jugadores);
+            if (datos.juegoTerminado) return;
+
+            // ── Coin (single persistent element) ──
+            if (!monedaEl) {
+                monedaEl = document.createElement('div');
+                monedaEl.className = 'moneda';
+                contenedor.appendChild(monedaEl);
+            }
+            monedaEl.style.left = datos.moneda.x + 'px';
+            monedaEl.style.top  = datos.moneda.y + 'px';
+
+            // ── Players ──
+            const seen = new Set();
+            for (const id in datos.jugadores) {
+                const info = datos.jugadores[id];
+                seen.add(id);
+                const prev = posicionesAnteriores[id];
+                let estaCaminando = false;
+                let flip = 1;
+
+                if (prev) {
+                    const dx = info.x - prev.x;
+                    const dy = info.y - prev.y;
+                    if (dx !== 0 || dy !== 0) {
+                        estaCaminando = true;
+                        flip = dx < 0 ? -1 : dx > 0 ? 1 : (prev.flip || 1);
+                    } else {
+                        flip = prev.flip || 1;
+                    }
+                }
+                posicionesAnteriores[id] = { x: info.x, y: info.y, flip };
+
+                const esMecanico = info.color === 'mecanico';
+                const esHada     = info.color === 'hada';
+                const clase = info.golpeado  ? 'golpeado'
+                            : info.patinando ? 'patinando'
+                            : estaCaminando  ? 'caminando' : 'idle';
+                const baseClass = 'sprite-personaje'
+                    + (esMecanico ? ' mecanico-sprite' : '')
+                    + (esHada     ? ' hada-sprite'     : '');
+
+                if (!gameEls[id]) {
+                    const divC = document.createElement('div');
+                    divC.className = 'jugador-container';
+                    const divN = document.createElement('div');
+                    divN.className = 'etiqueta-nombre';
+                    divC.appendChild(divN);
+                    const divS = document.createElement('div');
+                    divS.style.backgroundImage = esMecanico
+                        ? "url('img/mecanico_sheet.png')"
+                        : esHada ? "url('img/hada_sheet.png')"
+                        : `url('img/${info.color}.png')`;
+                    divC.appendChild(divS);
+                    contenedor.appendChild(divC);
+                    gameEls[id] = { divC, divN, divS };
+                }
+
+                const { divC, divN, divS } = gameEls[id];
+                divC.style.left = info.x + 'px';
+                divC.style.top  = (info.y - 20) + 'px';
+                divN.innerHTML  = `${info.nombre} ⭐${info.puntaje}`;
+                divS.className  = baseClass + ' ' + clase;
+                divS.style.setProperty('--flip', flip);
+            }
+
+            // Remove players that disconnected
+            for (const id in gameEls) {
+                if (!seen.has(id)) { gameEls[id].divC.remove(); delete gameEls[id]; }
+            }
+
+            for (const id in posicionesAnteriores) {
+                if (!datos.jugadores[id]) delete posicionesAnteriores[id];
+            }
+        });
+
+        socket.on('game_over', (nombreGanador) => {
+            pantallaFinal.classList.add('visible');
+            textoGanador.innerText = '¡' + nombreGanador + ' es el ganador!';
+            audioMusica.pause();
+            audioGanar.currentTime = 0;
+            audioGanar.play().catch(() => {});
+        });
+
+        socket.on('juego_reiniciado', () => {
+            limpiarArena();
+            pantallaFinal.classList.remove('visible');
+            audioGanar.pause();
+            audioMusica.play().catch(() => {});
+        });
+
+        socket.on('juego_terminado', () => {
+            limpiarArena();
+            pantallaFinal.classList.remove('visible');
+            audioGanar.pause();
+            audioMusica.currentTime = 0;
+            audioMusica.play().catch(() => {});
+        });
+    </script>
+</body>
+</html>

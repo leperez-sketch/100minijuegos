@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mando Celular</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 100vh; background: #1a1a2e; font-family: sans-serif;
+            overflow-x: hidden; touch-action: none;
+        }
+
+        /* ======= SCREEN 1: LOGIN ======= */
+        #pantalla-login {
+            background: rgba(255,255,255,0.08); padding: 28px 24px; border-radius: 18px;
+            text-align: center; border: 1.5px solid rgba(255,255,255,0.15); width: 90%; max-width: 340px;
+        }
+        #pantalla-login h2 { color: white; font-size: 22px; margin-bottom: 14px; }
+        #qr-invitar { display: block; width: 100px; height: 100px; margin: 0 auto 6px; border-radius: 8px; }
+        #qr-invitar-url { color: #888; font-size: 10px; margin-bottom: 18px; word-break: break-all; }
+        #nombre-input {
+            font-size: 20px; padding: 12px; border-radius: 12px; border: 2px solid #4db6ac;
+            text-align: center; width: 100%; background: rgba(255,255,255,0.1); color: white;
+            margin-bottom: 16px; outline: none;
+        }
+        #nombre-input::placeholder { color: #888; }
+        #btn-siguiente {
+            font-size: 18px; padding: 12px 30px; border-radius: 12px; border: 2px solid white;
+            background: #4db6ac; color: white; cursor: pointer; font-weight: bold; width: 100%;
+        }
+        #btn-siguiente:active { transform: scale(0.97); }
+
+        /* ======= SCREEN 2: CHARACTER SELECTION ======= */
+        #pantalla-personaje {
+            display: none; flex-direction: column; align-items: center;
+            width: 100%; min-height: 100vh; padding: 16px 12px 20px; overflow-y: auto;
+        }
+        #pantalla-personaje h2 { color: white; font-size: 20px; margin-bottom: 6px; }
+        #nombre-elegido { color: #4db6ac; font-size: 14px; margin-bottom: 14px; }
+
+        #grid-personajes {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; width: 100%; max-width: 360px; margin-bottom: 16px;
+        }
+        .carta-personaje {
+            background: rgba(255,255,255,0.07); border: 2.5px solid rgba(255,255,255,0.18);
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+            padding: 8px 4px 6px; cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+            user-select: none;
+        }
+        .carta-personaje:active { transform: scale(0.94); }
+        .carta-personaje.seleccionado {
+            background: rgba(77,182,172,0.3); border-color: #4db6ac;
+            box-shadow: 0 0 12px rgba(77,182,172,0.5);
+        }
+        .carta-personaje img { width: 72px; height: 72px; object-fit: contain; }
+        .carta-personaje span {
+            color: #ccc; font-size: 10px; font-weight: bold; margin-top: 4px;
+            text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .carta-personaje.seleccionado span { color: #4db6ac; }
+        #btn-jugar {
+            font-size: 20px; padding: 14px; border-radius: 14px; border: 2px solid white;
+            background: #4db6ac; color: white; cursor: pointer; font-weight: bold;
+            width: 100%; max-width: 360px; opacity: 0.4; pointer-events: none; transition: opacity 0.2s;
+        }
+        #btn-jugar.activo { opacity: 1; pointer-events: auto; }
+        #btn-jugar:active { transform: scale(0.97); }
+
+        /* ======= SCREEN 3: CONTROLLER (lobby + game, same joystick) ======= */
+        #pantalla-control {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            width: 100%; height: 100vh; gap: 10px; padding: 16px;
+        }
+
+        /* Top info area: changes between lobby and game modes */
+        #ctrl-top {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+        }
+        #ctrl-personaje-img {
+            width: 68px; height: 68px; object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(77,182,172,0.6));
+        }
+        #ctrl-estado {
+            color: #ffd700; font-size: 15px; font-weight: bold; text-align: center;
+            text-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+        #ctrl-hint {
+            color: #90caf9; font-size: 12px; text-align: center;
+        }
+
+        /* Joystick */
+        #joystick-base {
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.08); border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%; position: relative; touch-action: none; user-select: none;
+        }
+        #joystick-knob {
+            width: 90px; height: 90px; background: rgba(255,255,255,0.55);
+            border: 3px solid rgba(255,255,255,0.9); border-radius: 50%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; transition: transform 0.05s ease-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        #joystick-knob.active { background: rgba(255,255,255,0.75); transition: none; }
+
+        /* Jump hint shown in lobby mode */
+        #lobby-jump-hint {
+            color: rgba(255,255,255,0.5); font-size: 11px; text-align: center;
+        }
+
+        /* Ready button — hidden in lobby mode */
+        #btn-listo {
+            font-size: 18px; padding: 14px 36px;
+            border-radius: 50px; border: 3px solid white; font-weight: bold;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            background: rgba(255,255,255,0.12); color: white; display: none;
+        }
+        #btn-listo.visible { display: block; }
+        #btn-listo.listo { background: #66bb6a; border-color: #a5d6a7; }
+        #btn-listo:active { transform: scale(0.95); }
+
+        /* ======= SCREEN 4: GAME OVER ======= */
+        #pantalla-reinicio {
+            display: none; flex-direction: column; align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88); justify-content: center; z-index: 50;
+        }
+        #pantalla-reinicio h2 { color: white; font-size: 30px; margin-bottom: 30px; }
+        #btn-reiniciar {
+            font-size: 22px; padding: 18px 40px; background: #ff5252; color: white;
+            border: 3px solid white; border-radius: 15px; font-weight: bold; cursor: pointer;
+        }
+        #btn-reiniciar:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <!-- STEP 1: Name -->
+    <div id="pantalla-login">
+        <h2>¿Cómo te llamas?</h2>
+        <img id="qr-invitar" src="" alt="QR">
+        <p id="qr-invitar-url"></p>
+        <input type="text" id="nombre-input" placeholder="Tu nombre" maxlength="10" autocomplete="off">
+        <button id="btn-siguiente">Siguiente →</button>
+    </div>
+
+    <!-- STEP 2: Character selection -->
+    <div id="pantalla-personaje">
+        <h2>Elige tu personaje</h2>
+        <p id="nombre-elegido"></p>
+        <div id="grid-personajes"></div>
+        <button id="btn-jugar">¡A JUGAR!</button>
+    </div>
+
+    <!-- STEP 3: Controller (shared for lobby and game) -->
+    <div id="pantalla-control">
+        <div id="ctrl-top">
+            <img id="ctrl-personaje-img" src="" alt="">
+            <p id="ctrl-estado">En el Lobby...</p>
+            <p id="ctrl-hint">Empuja arriba para saltar 🕹️</p>
+        </div>
+        <div id="joystick-base">
+            <div id="joystick-knob"></div>
+        </div>
+        <p id="lobby-jump-hint">↑ Arriba = saltar &nbsp;|&nbsp; ← → = moverse</p>
+        <button id="btn-listo">⬜ No listo</button>
+    </div>
+
+    <!-- STEP 4: Game over -->
+    <div id="pantalla-reinicio">
+        <h2>Juego Terminado</h2>
+        <button id="btn-reiniciar">¡JUGAR DE NUEVO!</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const divLogin     = document.getElementById('pantalla-login');
+        const divPersonaje = document.getElementById('pantalla-personaje');
+        const divControl   = document.getElementById('pantalla-control');
+        const divReinicio  = document.getElementById('pantalla-reinicio');
+        const inputNombre  = document.getElementById('nombre-input');
+        const btnSiguiente = document.getElementById('btn-siguiente');
+        const btnJugar     = document.getElementById('btn-jugar');
+        const gridPersonajes = document.getElementById('grid-personajes');
+
+        const ctrlEstado  = document.getElementById('ctrl-estado');
+        const ctrlHint    = document.getElementById('ctrl-hint');
+        const lobbyJumpHint = document.getElementById('lobby-jump-hint');
+        const btnListo    = document.getElementById('btn-listo');
+
+        // --- QR code ---
+        const mandoURL = window.location.href.split('?')[0];
+        document.getElementById('qr-invitar').src =
+            'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(mandoURL) + '&size=100x100&bgcolor=ffffff';
+        document.getElementById('qr-invitar-url').textContent = mandoURL;
+
+        // --- Character roster ---
+        const personajes = [
+            { id: 'rojo',       nombre: 'Dragón'    },
+            { id: 'azul',       nombre: 'Robot'     },
+            { id: 'verde',      nombre: 'Bruja'     },
+            { id: 'amarillo',   nombre: 'Estrella'  },
+            { id: 'morado',     nombre: 'Fantasma'  },
+            { id: 'naranja',    nombre: 'Mapache'   },
+            { id: 'ninja',      nombre: 'Ninja'     },
+            { id: 'astronauta', nombre: 'Astro'     },
+            { id: 'caballero',  nombre: 'Caballero' },
+            { id: 'hada',       nombre: 'Hada'      },
+            { id: 'mecanico',   nombre: 'Mecánico'  },
+            { id: 'samurai',    nombre: 'Samurai'   },
+        ];
+
+        let personajeSeleccionado = null;
+
+        personajes.forEach(p => {
+            const carta = document.createElement('div');
+            carta.className = 'carta-personaje';
+            carta.dataset.id = p.id;
+            carta.innerHTML = `<img src="img/${p.id}.png" alt="${p.nombre}"><span>${p.nombre}</span>`;
+            carta.addEventListener('click', () => {
+                document.querySelectorAll('.carta-personaje').forEach(c => c.classList.remove('seleccionado'));
+                carta.classList.add('seleccionado');
+                personajeSeleccionado = p.id;
+                btnJugar.classList.add('activo');
+            });
+            gridPersonajes.appendChild(carta);
+        });
+
+        // --- STEP 1 → STEP 2 ---
+        btnSiguiente.addEventListener('click', () => {
+            const nombre = inputNombre.value.trim();
+            if (!nombre) { inputNombre.focus(); return; }
+            document.getElementById('nombre-elegido').textContent = 'Jugador: ' + nombre;
+            divLogin.style.display = 'none';
+            divPersonaje.style.display = 'flex';
+        });
+        inputNombre.addEventListener('keydown', e => { if (e.key === 'Enter') btnSiguiente.click(); });
+
+        // --- STEP 2 → STEP 3 (Lobby) ---
+        btnJugar.addEventListener('click', () => {
+            if (!personajeSeleccionado) return;
+            const nombre = inputNombre.value.trim();
+            socket.emit('unirse_al_juego', { nombre, personaje: personajeSeleccionado });
+            document.getElementById('ctrl-personaje-img').src = `img/${personajeSeleccionado}.png`;
+            ctrlEstado.textContent = '¡En el Lobby, ' + nombre + '!';
+            ctrlHint.textContent = 'Muévete mientras esperas que el anfitrión inicie 🎮';
+            lobbyJumpHint.style.display = 'block';
+            btnListo.classList.remove('visible');
+            divPersonaje.style.display = 'none';
+            divControl.style.display = 'flex';
+            lobbyMode = true;
+            ensureSendLoop();   // start continuous event stream
+        });
+
+        // ===== JOYSTICK =====
+        const base = document.getElementById('joystick-base');
+        const knob = document.getElementById('joystick-knob');
+
+        const BASE_RADIUS    = 100;
+        const KNOB_RADIUS    = 45;
+        const MAX_DIST       = BASE_RADIUS - KNOB_RADIUS;
+        const DEAD_ZONE      = 15;
+        const SEND_INTERVAL_MS = 50;
+
+        let touching = false;
+        let joyDx = 0, joyDy = 0;
+        let sendInterval = null;
+        let lobbyMode = false;
+        let estaListo = false;
+
+        function getBaseCenter() {
+            const r = base.getBoundingClientRect();
+            return { cx: r.left + BASE_RADIUS, cy: r.top + BASE_RADIUS };
+        }
+
+        function updateKnob(rawDx, rawDy) {
+            const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
+            const angle = Math.atan2(rawDy, rawDx);
+            const clampedDist = Math.min(dist, MAX_DIST);
+            knob.style.transform = `translate(calc(-50% + ${Math.cos(angle)*clampedDist}px), calc(-50% + ${Math.sin(angle)*clampedDist}px))`;
+            if (dist > DEAD_ZONE) {
+                joyDx = Math.cos(angle);
+                joyDy = Math.sin(angle);
+            } else {
+                joyDx = 0; joyDy = 0;
+            }
+        }
+
+        // Continuous send loop — started once when entering the control screen
+        function ensureSendLoop() {
+            if (sendInterval) return;
+            sendInterval = setInterval(() => {
+                if (lobbyMode) {
+                    socket.emit('mover_lobby', { dx: joyDx, dy: joyDy });
+                } else {
+                    socket.emit('mover_joystick', { dx: joyDx, dy: joyDy });
+                }
+            }, SEND_INTERVAL_MS);
+        }
+
+        function startTouch(touch) {
+            touching = true;
+            knob.classList.add('active');
+            const { cx, cy } = getBaseCenter();
+            updateKnob(touch.clientX - cx, touch.clientY - cy);
+        }
+
+        function moveTouch(touch) {
+            if (!touching) return;
+            const { cx, cy } = getBaseCenter();
+            updateKnob(touch.clientX - cx, touch.clientY - cy);
+        }
+
+        function endTouch() {
+            touching = false;
+            knob.classList.remove('active');
+            joyDx = 0; joyDy = 0;
+            knob.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // touchstart on base only — tracks the finger even if it slides off
+        base.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startTouch(e.touches[0]);
+        }, { passive: false });
+
+        // move + end on document so the joystick never "loses" the finger
+        document.addEventListener('touchmove', (e) => {
+            if (!touching) return;
+            e.preventDefault();
+            moveTouch(e.touches[0]);
+        }, { passive: false });
+        document.addEventListener('touchend',  (e) => {
+            if (!touching) return;
+            e.preventDefault();
+            endTouch();
+        }, { passive: false });
+        document.addEventListener('touchcancel', () => { if (touching) endTouch(); });
+
+        // Mouse fallback for desktop testing
+        base.addEventListener('mousedown',   (e) => startTouch(e));
+        window.addEventListener('mousemove', (e) => { if (touching) moveTouch(e); });
+        window.addEventListener('mouseup',   ()  => { if (touching) endTouch(); });
+
+        // --- Game starts (lobby → game) ---
+        socket.on('juego_iniciado', () => {
+            lobbyMode = false;
+            const nombre = inputNombre.value.trim();
+            ctrlEstado.textContent = nombre;
+            ctrlHint.textContent = '¡A recoger monedas!';
+            lobbyJumpHint.style.display = 'none';
+            btnListo.classList.add('visible');
+        });
+
+        // --- Ready button ---
+        btnListo.addEventListener('click', () => {
+            estaListo = !estaListo;
+            socket.emit('toggle_listo');
+            btnListo.textContent = estaListo ? '✅ ¡Listo!' : '⬜ No listo';
+            btnListo.classList.toggle('listo', estaListo);
+        });
+
+        // --- Game events ---
+        socket.on('game_over', () => {
+            endTouch();
+            divReinicio.style.display = 'flex';
+        });
+
+        document.getElementById('btn-reiniciar').onclick = () => {
+            socket.emit('reiniciar_juego');
+        };
+
+        socket.on('juego_reiniciado', () => {
+            divReinicio.style.display = 'none';
+            estaListo = false;
+            btnListo.textContent = '⬜ No listo';
+            btnListo.classList.remove('listo');
+        });
+
+        socket.on('juego_terminado', () => {
+            endTouch();
+            lobbyMode = false;
+            divReinicio.style.display = 'none';
+            divControl.style.display = 'none';
+            divPersonaje.style.display = 'none';
+            divLogin.style.display = 'block';
+            personajeSeleccionado = null;
+            document.querySelectorAll('.carta-personaje').forEach(c => c.classList.remove('seleccionado'));
+            btnJugar.classList.remove('activo');
+            estaListo = false;
+            btnListo.textContent = '⬜ No listo';
+            btnListo.classList.remove('listo', 'visible');
+        });
+
+        socket.on('volver_lobby', () => {
+            endTouch();
+            lobbyMode = true;
+            estaListo = false;
+            divReinicio.style.display = 'none';
+            divPersonaje.style.display = 'none';
+            divLogin.style.display = 'none';
+            divControl.style.display = 'flex';
+            btnListo.textContent = '⬜ No listo';
+            btnListo.classList.remove('listo', 'visible');
+            ensureSendLoop();
+        });
+    </script>
+</body>
+</html>
