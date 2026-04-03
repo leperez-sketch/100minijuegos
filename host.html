@@ -426,28 +426,28 @@
             25%,75% { transform: scaleX(var(--flip,1)) translateY(-4px); }
         }
 
-        /* IDLE: alterna entre fila 1 y fila 2 del idle sheet cada ciclo */
+        /* IDLE */
         .sprite-personaje.samurai-sprite.idle {
             background-image: url('/img/samurai_idle_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-bob      1.8s ease-in-out infinite,
-                       sam-idle-pos 0.9s steps(6, end) infinite;
+            animation: sam-bob      2.4s ease-in-out infinite,
+                       sam-idle-pos 2.4s steps(6, end) infinite;
         }
 
-        /* CAMINANDO: usa run sheet, recorre 6 frames de la fila 1 */
+        /* CAMINANDO */
         .sprite-personaje.samurai-sprite.caminando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-run-bob 0.65s ease-in-out infinite,
-                       sam-run-pos 0.65s steps(6, end) infinite;
+            animation: sam-run-bob 0.9s ease-in-out infinite,
+                       sam-run-pos 0.9s steps(6, end) infinite;
         }
 
-        /* PATINANDO: run sheet más rápido */
+        /* PATINANDO */
         .sprite-personaje.samurai-sprite.patinando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-run-bob 0.35s ease-in-out infinite,
-                       sam-run-pos 0.35s steps(6, end) infinite;
+            animation: sam-run-bob 0.55s ease-in-out infinite,
+                       sam-run-pos 0.55s steps(6, end) infinite;
             filter: drop-shadow(0 0 10px #ff5252);
         }
 
