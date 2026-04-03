@@ -217,13 +217,7 @@
             filter: drop-shadow(0 0 8px #00e5ff);
         }
 
-        /* === ROBOT SPRITESHEET (1380×752, 4 cols × 3 rows) ===
-           background-size: 400% 300%
-           Col positions: 0%  33.33%  66.67%  100%
-           Row positions: 0%  50%     100%
-           Row 0 (y=0%):   Idle frames  (arm variation × 4)
-           Row 1 (y=50%):  Walk frames  (walk cycle × 4)
-           Row 2 (y=100%): Attack frames (charge/fire/laser/explode × 4) */
+        /* === ROBOT SPRITESHEET (1380×752, 4 cols × 3 rows) === */
         .sprite-personaje.mecanico-sprite {
             background-size: 400% 300%;
             background-position: 0% 0%;
@@ -234,7 +228,6 @@
             background-size: 400% 300% !important;
         }
 
-        /* ── Idle: cycle row 0 (4 frames, 1s) ── */
         @keyframes mec-idle-pos {
             0%    { background-position: 0%       0%; }
             25%   { background-position: 33.33%   0%; }
@@ -246,7 +239,6 @@
             50%     { transform: scaleX(var(--flip,1)) translateY(-3px); }
         }
 
-        /* ── Walk: cycle row 1 (4 frames, 0.4s) ── */
         @keyframes mec-walk-pos {
             0%    { background-position: 0%       50%; }
             25%   { background-position: 33.33%   50%; }
@@ -258,7 +250,6 @@
             25%,75% { transform: scaleX(var(--flip,1)) translateY(-4px); }
         }
 
-        /* ── Attack/Skate: row 2 frames 1-2 (laser firing, 0.3s) ── */
         @keyframes mec-laser-pos {
             0%    { background-position: 33.33%  100%; }
             50%   { background-position: 66.67%  100%; }
@@ -268,7 +259,6 @@
             50%     { transform: scaleX(var(--flip,1)) scaleY(1.0)  translateY(0px); }
         }
 
-        /* ── Hit: row 2 frame 3 (explosion) ── */
         @keyframes mec-hit-pos {
             0%, 100% { background-position: 100% 100%; }
         }
@@ -298,14 +288,13 @@
             animation: golpe 0.4s ease-out forwards, mec-hit-pos 0.4s steps(1) forwards;
         }
 
-        /* ---- HADA sprite — fully spritesheet-based (5-col × 2-row) ---- */
+        /* ---- HADA sprite ---- */
         .sprite-personaje.hada-sprite {
             background-size: 500% 200%;
             background-position: 0% 0%;
             background-repeat: no-repeat;
         }
 
-        /* Frame cycling — idle uses row 1 (0%), walk uses row 2 (100%) */
         @keyframes hada-idle-pos {
             0%   { background-position: 0%   0%; }
             20%  { background-position: 25%  0%; }
@@ -321,7 +310,6 @@
             80%  { background-position: 100% 100%; }
         }
 
-        /* Transform animations (vertical float / bob + flip) */
         @keyframes hada-float {
             0%,100% { transform: scaleX(var(--flip,1)) translateY(0px);  }
             50%     { transform: scaleX(var(--flip,1)) translateY(-6px);  }
@@ -331,7 +319,6 @@
             50%     { transform: scaleX(var(--flip,1)) translateY(-4px);  }
         }
 
-        /* Idle: gentle float through row 1 */
         .sprite-personaje.hada-sprite.idle {
             background-image: url('/img/hada_sheet.png') !important;
             background-size: 500% 200% !important;
@@ -339,7 +326,6 @@
                        hada-idle-pos 1.8s steps(1)    infinite;
         }
 
-        /* Walking: faster cycle through row 2 */
         .sprite-personaje.hada-sprite.caminando {
             background-image: url('/img/hada_sheet.png') !important;
             background-size: 500% 200% !important;
@@ -347,7 +333,6 @@
                        hada-walk-pos 0.5s steps(1)    infinite;
         }
 
-        /* Skating: same walk cycle, faster + purple glow */
         .sprite-personaje.hada-sprite.patinando {
             background-image: url('/img/hada_sheet.png') !important;
             background-size: 500% 200% !important;
@@ -356,27 +341,24 @@
             filter: drop-shadow(0 0 8px #c77dff);
         }
 
-        /* Hit state */
         .sprite-personaje.hada-sprite.golpeado {
             background-image: url('/img/hada_sheet.png') !important;
             background-size: 500% 200% !important;
             animation: golpe 0.4s ease-out forwards;
         }
 
-        /* Lobby: bigger container to compensate for spritesheet padding */
         .lobby-sprite.hada-sprite {
             width:  260px !important;
             height: 260px !important;
             background-size: 500% 200% !important;
         }
 
-        /* Game sprite: slightly larger than 90×90 for same reason */
         .sprite-personaje.hada-sprite {
             width:  120px !important;
             height: 120px !important;
         }
 
-        /* ---- SAMURAI (gato) — idle: misma hoja, fila 1 + fila 2 (cadera) alternando 6+6 frames ---- */
+        /* ---- SAMURAI (gato) ---- */
         .sprite-personaje.samurai-sprite {
             width:  120px !important;
             height: 120px !important;
@@ -391,7 +373,7 @@
             background-size: 600% 200% !important;
         }
 
-        /* Idle: fila 1 (y=0%) 6 frames, luego fila 2 manos en cadera (y=100%) 6 frames, y repite */
+        /* Animación de Idle: Recorre los 12 cuadros (6 col x 2 filas) */
         @keyframes sam-idle-dual-pos {
             0%      { background-position: 0%    0%; }
             8.33%   { background-position: 20%   0%; }
@@ -407,24 +389,37 @@
             91.67%  { background-position: 100% 100%; }
             100%    { background-position: 0%    0%; }
         }
+
         @keyframes sam-idle-bob {
             0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
             25%     { transform: scaleX(var(--flip,1)) translateY(-4px); }
             50%     { transform: scaleX(var(--flip,1)) translateY(-2px); }
             75%     { transform: scaleX(var(--flip,1)) translateY(-4px); }
         }
+
+        /* Animación de Correr: Ahora recorre los 12 cuadros del spritesheet de run */
         @keyframes sam-run-pos {
-            0%   { background-position: 0%   100%; }
-            20%  { background-position: 20%  100%; }
-            40%  { background-position: 40%  100%; }
-            60%  { background-position: 60%  100%; }
-            80%  { background-position: 80%  100%; }
-            100% { background-position: 100% 100%; }
+            0%      { background-position: 0%    0%; }
+            8.33%   { background-position: 20%   0%; }
+            16.67%  { background-position: 40%   0%; }
+            25%     { background-position: 60%   0%; }
+            33.33%  { background-position: 80%   0%; }
+            41.67%  { background-position: 100%  0%; }
+            50%     { background-position: 0%   100%; }
+            58.33%  { background-position: 20%  100%; }
+            66.67%  { background-position: 40%  100%; }
+            75%     { background-position: 60%  100%; }
+            83.33%  { background-position: 80%  100%; }
+            91.67%  { background-position: 100% 100%; }
+            100%    { background-position: 0%    0%; }
         }
+
         @keyframes sam-run-bob {
             0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
             25%,75% { transform: scaleX(var(--flip,1)) translateY(-5px); }
         }
+
+        /* Animación de Dash (Golpeado) */
         @keyframes sam-dash-pos {
             0%   { background-position: 0%   0%; }
             20%  { background-position: 20%  0%; }
@@ -438,21 +433,24 @@
             background-image: url('/img/samurai_idle_sheet.png') !important;
             background-size: 600% 200% !important;
             animation: sam-idle-bob 2.8s ease-in-out infinite,
-                       sam-idle-dual-pos 2.8s steps(12, end) infinite;
+                       sam-idle-dual-pos 2.8s steps(1) infinite;
         }
+
         .sprite-personaje.samurai-sprite.caminando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
             animation: sam-run-bob 0.45s ease-in-out infinite,
-                       sam-run-pos 0.45s steps(1) infinite;
+                       sam-run-pos 0.6s steps(1) infinite; 
         }
+
         .sprite-personaje.samurai-sprite.patinando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
             animation: sam-run-bob 0.22s ease-in-out infinite,
-                       sam-run-pos 0.28s steps(1) infinite;
+                       sam-run-pos 0.35s steps(1) infinite;
             filter: drop-shadow(0 0 10px #ff5252);
         }
+
         .sprite-personaje.samurai-sprite.golpeado {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
@@ -535,18 +533,14 @@
     </style>
 </head>
 <body>
-    <!-- Transition: white flash + Let's Go sign (outside pantalla-inicio so they survive its hide) -->
     <div id="overlay-flash"></div>
     <div id="letsgo-sign"><img src="/img/letsgo.png" alt="LET'S GO!"></div>
 
     <div id="pantalla-inicio">
-        <!-- Characters walk in the background -->
         <div id="lobby-personajes"></div>
 
-        <!-- 3-column layout -->
         <div id="lobby-layout">
 
-            <!-- LEFT: QR + Volume + Nav + Players -->
             <div id="lobby-left">
                 <div id="lobby-qr-card" class="lobby-card">
                     <p id="lobby-qr-title">📡 Escanea para jugar</p>
@@ -564,7 +558,6 @@
                 </div>
             </div>
 
-            <!-- CENTER: Cartridge selector (no background card) -->
             <div id="lobby-center">
                 <div id="game-selector">
                     <button id="btn-prev-game" class="px-btn"><img src="/img/btn_prev.png" width="80" alt="◀"></button>
@@ -577,7 +570,6 @@
                 <button id="btn-iniciar"><img src="/img/btn_iniciar.png" alt="INICIAR JUEGO"></button>
             </div>
 
-            <!-- RIGHT: empty space so center stays centered -->
             <div id="lobby-right" style="min-width:200px;max-width:240px;flex-shrink:0;"></div>
 
         </div>
