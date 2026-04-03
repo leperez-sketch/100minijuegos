@@ -377,44 +377,37 @@
             background-size: 600% 200% !important;
         }
 
-        /* Fila 0 (idle sheet): 6 frames horizontales, empieza en Y=0% */
+        /* Idle sheet: 12 frames en 2 filas (6 cols x 2 rows)
+           Recorre fila 1 (Y=0%) luego fila 2 (Y=100%) */
         @keyframes sam-idle-pos {
-            0%   { background-position: 0%   0%; }
-            16.6%{ background-position: 20%  0%; }
-            33.3%{ background-position: 40%  0%; }
-            50%  { background-position: 60%  0%; }
-            66.6%{ background-position: 80%  0%; }
-            83.3%{ background-position: 100% 0%; }
+            0%      { background-position: 0%   0%;    }
+            8.33%   { background-position: 20%  0%;    }
+            16.66%  { background-position: 40%  0%;    }
+            25%     { background-position: 60%  0%;    }
+            33.33%  { background-position: 80%  0%;    }
+            41.66%  { background-position: 100% 0%;    }
+            50%     { background-position: 0%   100%;  }
+            58.33%  { background-position: 20%  100%;  }
+            66.66%  { background-position: 40%  100%;  }
+            75%     { background-position: 60%  100%;  }
+            83.33%  { background-position: 80%  100%;  }
+            91.66%  { background-position: 100% 100%;  }
         }
 
-        /* Fila 0 fila 2 del idle sheet: Y=100% */
-        @keyframes sam-idle2-pos {
-            0%   { background-position: 0%   100%; }
-            16.6%{ background-position: 20%  100%; }
-            33.3%{ background-position: 40%  100%; }
-            50%  { background-position: 60%  100%; }
-            66.6%{ background-position: 80%  100%; }
-            83.3%{ background-position: 100% 100%; }
-        }
-
-        /* Fila 0 del run sheet: Y=0% */
+        /* Run sheet: misma estructura 12 frames */
         @keyframes sam-run-pos {
-            0%   { background-position: 0%   0%; }
-            16.6%{ background-position: 20%  0%; }
-            33.3%{ background-position: 40%  0%; }
-            50%  { background-position: 60%  0%; }
-            66.6%{ background-position: 80%  0%; }
-            83.3%{ background-position: 100% 0%; }
-        }
-
-        /* Fila 2 del run sheet: Y=100% */
-        @keyframes sam-run2-pos {
-            0%   { background-position: 0%   100%; }
-            16.6%{ background-position: 20%  100%; }
-            33.3%{ background-position: 40%  100%; }
-            50%  { background-position: 60%  100%; }
-            66.6%{ background-position: 80%  100%; }
-            83.3%{ background-position: 100% 100%; }
+            0%      { background-position: 0%   0%;    }
+            8.33%   { background-position: 20%  0%;    }
+            16.66%  { background-position: 40%  0%;    }
+            25%     { background-position: 60%  0%;    }
+            33.33%  { background-position: 80%  0%;    }
+            41.66%  { background-position: 100% 0%;    }
+            50%     { background-position: 0%   100%;  }
+            58.33%  { background-position: 20%  100%;  }
+            66.66%  { background-position: 40%  100%;  }
+            75%     { background-position: 60%  100%;  }
+            83.33%  { background-position: 80%  100%;  }
+            91.66%  { background-position: 100% 100%;  }
         }
 
         @keyframes sam-bob {
@@ -426,28 +419,28 @@
             25%,75% { transform: scaleX(var(--flip,1)) translateY(-4px); }
         }
 
-        /* IDLE */
+        /* IDLE: 12 frames a ~8fps = 1.5s */
         .sprite-personaje.samurai-sprite.idle {
             background-image: url('/img/samurai_idle_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-bob      2.4s ease-in-out infinite,
-                       sam-idle-pos 2.4s steps(6, end) infinite;
+            animation: sam-bob      1.5s ease-in-out infinite,
+                       sam-idle-pos 1.5s steps(12, end) infinite;
         }
 
-        /* CAMINANDO */
+        /* CAMINANDO: 12 frames a ~12fps = 1s */
         .sprite-personaje.samurai-sprite.caminando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-run-bob 0.9s ease-in-out infinite,
-                       sam-run-pos 0.9s steps(6, end) infinite;
+            animation: sam-run-bob 1.0s ease-in-out infinite,
+                       sam-run-pos 1.0s steps(12, end) infinite;
         }
 
-        /* PATINANDO */
+        /* PATINANDO: 12 frames a ~16fps = 0.75s */
         .sprite-personaje.samurai-sprite.patinando {
             background-image: url('/img/samurai_run_sheet.png') !important;
             background-size: 600% 200% !important;
-            animation: sam-run-bob 0.55s ease-in-out infinite,
-                       sam-run-pos 0.55s steps(6, end) infinite;
+            animation: sam-run-bob 0.75s ease-in-out infinite,
+                       sam-run-pos 0.75s steps(12, end) infinite;
             filter: drop-shadow(0 0 10px #ff5252);
         }
 
