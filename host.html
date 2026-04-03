@@ -360,84 +360,73 @@
 
        /* ---- SAMURAI (gato) ---- */
         .sprite-personaje.samurai-sprite {
-            width:  120px !important;
-            height: 120px !important;
-            background-size: 600% 200%;
-            background-position: 0% 0%;
+            font-size: 1px; /* Truco mágico: 1em = 1px en la arena */
+            
+            /* Recortamos 10px de cada lado para esconder al fantasma */
+            width:  100em !important; 
+            height: 120em !important;
+            
+            /* Forzamos el tamaño absoluto de la imagen (6 col x 120 = 720, 2 filas x 120 = 240) */
+            background-size: 720em 240em !important;
+            background-position: -10em 0em; /* Centramos el recorte */
             background-repeat: no-repeat;
             background-image: url('/img/samurai_idle_sheet.png');
         }
+        
         .lobby-sprite.samurai-sprite {
-            width:  240px !important;
-            height: 240px !important;
-            background-size: 600% 200% !important;
+            font-size: 2px !important; /* En el lobby, 1em = 2px (escala todo al doble perfecto) */
         }
 
-        /* Idle: porcentajes exactos de 12 frames (6 arriba, 6 abajo) */
-        @keyframes sam-idle-dual-pos {
-            0%      { background-position: 0%    0%; }
-            8.33%   { background-position: 20%   0%; }
-            16.67%  { background-position: 40%   0%; }
-            25%     { background-position: 60%   0%; }
-            33.33%  { background-position: 80%   0%; }
-            41.67%  { background-position: 100%  0%; }
-            50%     { background-position: 0%   100%; }
-            58.33%  { background-position: 20%  100%; }
-            66.67%  { background-position: 40%  100%; }
-            75%     { background-position: 60%  100%; }
-            83.33%  { background-position: 80%  100%; }
-            91.67%  { background-position: 100% 100%; }
-            100%    { background-position: 100% 100%; }
+        /* Usamos una sola animación exacta de 12 fotogramas para Idle y Correr */
+        @keyframes sam-frames-pos {
+            0%      { background-position: -10em      0em; }
+            8.33%   { background-position: -130em     0em; }
+            16.67%  { background-position: -250em     0em; }
+            25%     { background-position: -370em     0em; }
+            33.33%  { background-position: -490em     0em; }
+            41.67%  { background-position: -610em     0em; }
+            50%     { background-position: -10em   -120em; }
+            58.33%  { background-position: -130em  -120em; }
+            66.67%  { background-position: -250em  -120em; }
+            75%     { background-position: -370em  -120em; }
+            83.33%  { background-position: -490em  -120em; }
+            91.67%  { background-position: -610em  -120em; }
+            100%    { background-position: -10em      0em; }
         }
+
         @keyframes sam-idle-bob {
-            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
-            25%     { transform: scaleX(var(--flip,1)) translateY(-4px); }
-            50%     { transform: scaleX(var(--flip,1)) translateY(-2px); }
-            75%     { transform: scaleX(var(--flip,1)) translateY(-4px); }
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0em); }
+            25%     { transform: scaleX(var(--flip,1)) translateY(-4em); }
+            50%     { transform: scaleX(var(--flip,1)) translateY(-2em); }
+            75%     { transform: scaleX(var(--flip,1)) translateY(-4em); }
         }
 
-        /* Correr: porcentajes exactos de 6 frames */
-        @keyframes sam-run-pos {
-            0%      { background-position: 0%    0%; }
-            16.67%  { background-position: 20%   0%; }
-            33.33%  { background-position: 40%   0%; }
-            50%     { background-position: 60%   0%; }
-            66.67%  { background-position: 80%   0%; }
-            83.33%  { background-position: 100%  0%; }
-            100%    { background-position: 100%  0%; }
-        }
         @keyframes sam-run-bob {
-            0%,100% { transform: scaleX(var(--flip,1)) translateY(0px); }
-            25%,75% { transform: scaleX(var(--flip,1)) translateY(-5px); }
+            0%,100% { transform: scaleX(var(--flip,1)) translateY(0em); }
+            25%,75% { transform: scaleX(var(--flip,1)) translateY(-5em); }
         }
 
+        /* Aplicación de estados */
         .sprite-personaje.samurai-sprite.idle {
             background-image: url('/img/samurai_idle_sheet.png') !important;
-            background-size: 600% 200% !important;
-            /* Solución al parpadeo: steps(1) */
             animation: sam-idle-bob 2.8s ease-in-out infinite,
-                       sam-idle-dual-pos 2.8s steps(1) infinite;
+                       sam-frames-pos 2.8s steps(1) infinite;
         }
         .sprite-personaje.samurai-sprite.caminando {
             background-image: url('/img/samurai_run_sheet.png') !important;
-            background-size: 600% 200% !important;
-            /* Solución a la velocidad: aumentado de 0.45s a 0.65s */
             animation: sam-run-bob 0.65s ease-in-out infinite,
-                       sam-run-pos 0.65s steps(1) infinite;
+                       sam-frames-pos 0.65s steps(1) infinite;
         }
         .sprite-personaje.samurai-sprite.patinando {
             background-image: url('/img/samurai_run_sheet.png') !important;
-            background-size: 600% 200% !important;
-            /* Solución a la velocidad: aumentado de 0.22s a 0.35s */
             animation: sam-run-bob 0.35s ease-in-out infinite,
-                       sam-run-pos 0.35s steps(1) infinite;
+                       sam-frames-pos 0.35s steps(1) infinite;
             filter: drop-shadow(0 0 10px #ff5252);
         }
         .sprite-personaje.samurai-sprite.golpeado {
             background-image: url('/img/samurai_run_sheet.png') !important;
-            background-size: 600% 200% !important;
             animation: golpe 0.4s ease-out forwards,
-                       sam-run-pos 0.4s steps(1) infinite;
+                       sam-frames-pos 0.4s steps(1) infinite;
         }
 
         .moneda {
